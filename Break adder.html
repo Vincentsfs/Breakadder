@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TTS Break Inserter</title>
+  <!-- React and ReactDOM -->
+  <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel for JSX transformation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #17242F;
+      color: #FFFFFF;
+      font-family: Arial, sans-serif;
+    }
+    #root {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      gap: 1rem;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: 1px solid #5D90A7;
+      background-color: #FFFFFF;
+      color: #000000;
+      box-sizing: border-box;
+    }
+    .button-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    button {
+      flex: 1;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-paste { background-color: #5D90A7; color: #FFFFFF; }
+    .btn-process { background-color: #FFFFFF; color: #000000; }
+    .btn-copy { background-color: #000000; color: #FFFFFF; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function TTSProcessor() {
+      const [inputText, setInputText] = useState('');
+      const [outputText, setOutputText] = useState('');
+
+      const handlePaste = async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          setInputText(text);
+        } catch (err) {
+          console.error('Failed to read clipboard contents: ', err);
+          alert('Unable to access clipboard. Make sure your browser allows clipboard access on this page.');
+        }
+      };
+
+      const handleProcess = () => {
+        let processed = inputText
+          .replace(/\n{2,}/g, match => `${match}<break time="0.5s"/>\n\n`)
+          .replace(/([.?!])\s*/g, '$1<break time="0.5s"/> ');
+        setOutputText(processed);
+      };
+
+      const handleCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(outputText);
+          alert('Processed text copied to clipboard!');
+        } catch (err) {
+          console.error('Failed to write to clipboard: ', err);
+          alert('Unable to copy to clipboard. Make sure your browser allows clipboard access on this page.');
+        }
+      };
+
+      return (
+        <>
+          <div className="button-row">
+            <button onClick={handlePaste} className="btn-paste">Paste</button>
+            <button onClick={handleProcess} className="btn-process">Process</button>
+            <button onClick={handleCopy} className="btn-copy">Copy</button>
+          </div>
+          <textarea
+            placeholder="Input text here (or click Paste)…"
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+          />
+          <textarea
+            placeholder="Processed output will appear here…"
+            value={outputText}
+            readOnly
+          />
+        </>
+      );
+    }
+
+    ReactDOM.render(<TTSProcessor />, document.getElementById('root'));
+  </script>
+</body>
+</html>
